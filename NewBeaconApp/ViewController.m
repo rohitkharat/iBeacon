@@ -54,7 +54,6 @@
     NSLog(@"UUID: %@", uuid);
     NSLog(@"major: %@", major);
     NSLog(@"minor: %@", minor);
-    
 }
 
 - (void)viewDidDisappear:(BOOL)animated
