@@ -40,20 +40,52 @@
 
 -(void)locationManager:(CLLocationManager*)manager didRangeBeacons:(NSArray*)beacons inRegion:(CLBeaconRegion*)region
 {
-    // Beacon found!
-    self.label1.text = @"Welcome to";
-    self.label2.text = @"Rohit's Desk";
-    
     CLBeacon *foundBeacon = [beacons firstObject];
     
-    // You can retrieve the beacon data from its properties
-    NSString *uuid = foundBeacon.proximityUUID.UUIDString;
-    NSString *major = [NSString stringWithFormat:@"%@", foundBeacon.major];
-    NSString *minor = [NSString stringWithFormat:@"%@", foundBeacon.minor];
+    if (foundBeacon.proximity == CLProximityNear || foundBeacon.proximity == CLProximityImmediate)
+    {
+        
+        // Beacon found!
+        self.label1.text = @"Welcome to";
+//        self.label2.text = @"Rohit's Desk";
+        
+        
+        // You can retrieve the beacon data from its properties
+        NSString *uuid = foundBeacon.proximityUUID.UUIDString;
+        NSString *major = [NSString stringWithFormat:@"%@", foundBeacon.major];
+        NSString *minor = [NSString stringWithFormat:@"%@", foundBeacon.minor];
+        
+        NSLog(@"UUID: %@", uuid);
+        NSLog(@"major: %@", major);
+        NSLog(@"minor: %@", minor);
+        
+//        web-service call
+            NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://192.168.40.113:8080/TestWebService/rest/UserInfoService/json/%@",minor]];
+            NSURLRequest *request = [NSURLRequest requestWithURL:url];
+            [NSURLConnection sendAsynchronousRequest:request
+                                               queue:[NSOperationQueue mainQueue]
+                                   completionHandler:^(NSURLResponse *response,
+                                                    NSData *data, NSError *connectionError)
+             {
+                 if (data.length > 0 && connectionError == nil)
+                 {
+                     NSLog(@"received response!!!");
+                     NSDictionary *jsonResponse = [NSJSONSerialization JSONObjectWithData:data
+                                                                                  options:0
+                                                                                    error:NULL];
+//                     NSLog(@"location = %@",[[jsonResponse objectForKey:@"locationName"] stringValue]);
+                     self.label2.text = [jsonResponse objectForKey:@"locationName"] ;
+                 }
+             }];
+    }
     
-    NSLog(@"UUID: %@", uuid);
-    NSLog(@"major: %@", major);
-    NSLog(@"minor: %@", minor);
+    else
+    {
+        self.label1.text = @"Searching...";
+        self.label2.text = @"";
+    }
+    
+    
 }
 
 - (void)viewDidDisappear:(BOOL)animated
@@ -71,7 +103,9 @@
 -(void)locationManager:(CLLocationManager*)manager didExitRegion:(CLRegion*)region
 {
     [self.locManager stopRangingBeaconsInRegion:self.beaconRegion];
-    self.label1.text = @"Searching again...";
+    
+
+    
 }
 
 - (void)locationManager:(CLLocationManager *)manager didStartMonitoringForRegion:(CLRegion *)region {
